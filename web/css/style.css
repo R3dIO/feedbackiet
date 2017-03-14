@@ -1,0 +1,17 @@
+.header{
+    /*height:150px;*/
+    /*margin-bottom: 20px;*/    
+    padding-bottom: 10px;
+    padding-top: 10px;
+    background: #419641
+}
+.logo-image{
+    height:100px;
+    margin-left: 40px;
+}
+.college-name{
+    margin-top: 20px;   
+}
+.navbar{
+    width: 100%;
+}
