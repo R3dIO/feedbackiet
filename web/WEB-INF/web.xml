@@ -8,6 +8,14 @@
         <servlet-name>JsonApiServlet</servlet-name>
         <servlet-class>servlet.JsonApiServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>servlet.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>FeedbackServlet</servlet-name>
+        <servlet-class>servlet.FeedbackServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>Login Servlet</servlet-name>
         <url-pattern>/LoginServlet</url-pattern>
@@ -15,6 +23,14 @@
     <servlet-mapping>
         <servlet-name>JsonApiServlet</servlet-name>
         <url-pattern>/JsonApiServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/LogoutServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>FeedbackServlet</servlet-name>
+        <url-pattern>/FeedbackServlet</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

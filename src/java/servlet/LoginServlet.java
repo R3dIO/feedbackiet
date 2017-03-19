@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import managers.SessionManager;
+import managers.UtilsManager;
 
 /**
  * @author Sapan
@@ -35,8 +36,9 @@ public class LoginServlet extends HttpServlet {
             schedulerLogin(request, response);
         } else {
             //Redirect to index page if neither faculty nor scheduler
-            new SessionManager(request, response, false).invalidateAllSession();
-            response.sendRedirect("Home.jsp");
+            SessionManager sm = new SessionManager(request, response, false);
+            sm.invalidateAllSession();
+            response.sendRedirect(UtilsManager.getLoginUrl("faculty"));
         }
     }
 
@@ -45,32 +47,32 @@ public class LoginServlet extends HttpServlet {
         String password = request.getParameter("password");
         LoginBean helperLoginBean = new LoginBean(username, password);
         LoginBean loginBean = helperLoginBean.findByUsernameAndPassword();
-        String location = "Home.jsp";
+        String location = UtilsManager.getLoginUrl("faculty");
         if (loginBean == null) {
             //Login Failed! Redirect to index page or login page
-            location = "Home.jsp?login_error=Incorrect login details";
+            location = UtilsManager.getLoginUrl("faculty") + "?login_error=Incorrect login details";
         } else {
             String type = loginBean.getType();
             SessionManager sm = new SessionManager(request, response, true);
             if (type.equalsIgnoreCase("faculty")) {
                 //Login Success! Redirect to Faculty Home Page
-                location = "faculty/Home.jsp";
+                location = UtilsManager.getHomeUrl("faculty");
                 sm.startFacultySession(loginBean);
             } else if (type.equalsIgnoreCase("hod")) {
                 //Login Success! Redirect to HOD Home Page
-                location = "hod/Home.jsp";
+                location = UtilsManager.getHomeUrl("hod");
                 sm.startFacultySession(loginBean);
             } else if (type.equalsIgnoreCase("director")) {
                 //Login Success! Redirect to Director Home Page
-                location = "director/Home.jsp";
+                location = UtilsManager.getHomeUrl("director");
                 sm.startFacultySession(loginBean);
             } else if (type.equalsIgnoreCase("admin")) {
                 //Login Success! Redirect to Admin Home Page
-                location = "admin/Home.jsp";
+                location = UtilsManager.getHomeUrl("admin");
                 sm.startFacultySession(loginBean);
             } else {
                 //Login Failed! Redirect to index page or login page
-                location = "Home.jsp?login_error=Incorrect login details";
+                location = UtilsManager.getLoginUrl("faculty") + "?login_error=Incorrect login details";
             }
         }
         response.sendRedirect(location);
@@ -81,15 +83,15 @@ public class LoginServlet extends HttpServlet {
         String password = request.getParameter("password");
         SchedulerBean helperSB = new SchedulerBean(username, password);
         SchedulerBean schedulerBean = helperSB.findByUsernameAndPassword();
-        String location = "SchedulerLogin.jsp";
+        String location = UtilsManager.getLoginUrl("scheduler");
         if (schedulerBean == null) {
             //Login Failed! Redirect to scheduler login page
-            location = "SchedulerLogin.jsp?login_error=Incorrect login details";
+            location = UtilsManager.getLoginUrl("scheduler") + "?login_error=Incorrect login details";
         } else {
             //Login Success! Redirect to scheduler index page
             SessionManager sm = new SessionManager(request, response, true);
             sm.startSchedulerSession(schedulerBean);
-            location = "scheduler/Home.jsp";
+            location = UtilsManager.getHomeUrl("scheduler");
         }
         response.sendRedirect(location);
     }

@@ -7,10 +7,14 @@ package beans;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -20,6 +24,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.TypedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -32,8 +37,9 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "CsfBean.findAll", query = "SELECT c FROM CsfBean c")
-    , @NamedQuery(name = "CsfBean.findById", query = "SELECT c FROM CsfBean c WHERE c.id = :id")})
-public class CsfBean implements Serializable {
+    , @NamedQuery(name = "CsfBean.findById", query = "SELECT c FROM CsfBean c WHERE c.id = :id")
+    ,  @NamedQuery(name = "CsfBean.findByClassIdAndSessionId", query = "SELECT c FROM CsfBean c WHERE c.classId = :classId AND c.sessionId = :sessionId")})
+public class CsfBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -136,5 +142,26 @@ public class CsfBean implements Serializable {
     public String toString() {
         return "beans.CsfBean[ id=" + id + " ]";
     }
-    
+
+    public void persist(Object object) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(object);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<CsfBean> findByClassIdAndSessionId() {
+        TypedQuery<CsfBean> query = getEntityManager().createNamedQuery("CsfBean.findByClassIdAndSessionId", CsfBean.class);
+        query.setParameter("classId", classId);
+        query.setParameter("sessionId", sessionId);
+        return query.getResultList();
+    }
+
 }

@@ -1,3 +1,5 @@
+<%@page import="managers.UtilsManager"%>
+<%@page import="managers.SessionManager"%>
 <%
     String relativeRootPath = "./";
 %>
@@ -6,6 +8,15 @@
     Created on : 8 Mar, 2017, 12:34:54 PM
     Author     : Sapan
 --%>
+<%
+    SessionManager sm = new SessionManager(request, response, false);
+    if (sm.isSchedulerSession()) {
+        String redirectUrl = relativeRootPath;
+        redirectUrl += UtilsManager.getHomeUrl("scheduler");
+        response.sendRedirect(redirectUrl);
+        return;
+    }
+%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
@@ -21,14 +32,16 @@
         <jsp:include page="includes/Header.jsp" >
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
+        <!--Check below file to see parameters functionality-->
         <jsp:include page="includes/Navbar.jsp">
-            <jsp:param name="home" value="active"/>
-            <jsp:param name="features" value=""/>
-            <jsp:param name="pricing" value=""/>
+            <jsp:param name="scheduler" value="active"/>
+            <jsp:param name="logout" value="hide-logout-button"/>
+            <jsp:param name="logout_url" value=""/>
+            <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
         <div class="container text-center">
             <hr>
-            <form action="LoginServlet" method="post">
+            <form action="<%=relativeRootPath %>LoginServlet" method="post">
                 <input type="hidden" name="login_type" value="scheduler"/>
                 <div class="row table">
                     <div class="col-12 text-center text-success font-weight-bold h3">Scheduler Login</div>

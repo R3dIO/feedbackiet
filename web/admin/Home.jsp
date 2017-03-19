@@ -1,3 +1,4 @@
+<%@page import="managers.UtilsManager"%>
 <%
     String relativeRootPath = "../";
 %>
@@ -13,8 +14,8 @@
 
 <%
     SessionManager sm = new SessionManager(request, response, false);
-    String onFailUrl = relativeRootPath + "Home.jsp";
-    if (!sm.checkAdminSession(onFailUrl)) {
+    if (!sm.isAdminSession()) {
+        response.sendRedirect(relativeRootPath + UtilsManager.getLoginUrl("admin"));
         return;
     }
 %>
@@ -28,14 +29,16 @@
         </jsp:include>
     </head>
     <body>
-
+        <%
+            String logoutUrl = relativeRootPath + "LogoutServlet?type=faculty";
+        %>
         <jsp:include page="../includes/Header.jsp" >
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
+        <!--Check below file to see parameters functionality-->
         <jsp:include page="../includes/Navbar.jsp">
-            <jsp:param name="home" value="active"/>
-            <jsp:param name="features" value=""/>
-            <jsp:param name="pricing" value=""/>
+            <jsp:param name="admin" value="active"/>
+            <jsp:param name="logout_url" value="<%=logoutUrl%>"/>
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
         <div class="container text-center">

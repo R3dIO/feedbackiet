@@ -23,12 +23,15 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import managers.LogManager;
 
 /**
  *
@@ -42,11 +45,13 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "ClassBean.findById", query = "SELECT c FROM ClassBean c WHERE c.id = :id")
     , @NamedQuery(name = "ClassBean.findByYear", query = "SELECT c FROM ClassBean c WHERE c.year = :year")
     , @NamedQuery(name = "ClassBean.findBySection", query = "SELECT c FROM ClassBean c WHERE c.section = :section")
-    , @NamedQuery(name = "ClassBean.findByDepartmentId", query = "SELECT c FROM ClassBean c WHERE c.departmentId = :departmentId")})
+    , @NamedQuery(name = "ClassBean.findByDepartmentId", query = "SELECT c FROM ClassBean c WHERE c.departmentId = :departmentId")
+    , @NamedQuery(name = "ClassBean.findClassByDepartmentIdNotInScheduledFeedback", query = "SELECT c FROM ClassBean c WHERE c.departmentId = :departmentId AND NOT EXISTS (SELECT s FROM ScheduledFeedbackBean s WHERE s.classId = c)")
+    , @NamedQuery(name = "ClassBean.findClassByDepartmentIdInScheduledFeedback", query = "SELECT c FROM ClassBean c WHERE c.departmentId = :departmentId AND EXISTS (SELECT s FROM ScheduledFeedbackBean s WHERE s.classId = c)")})
 public class ClassBean extends Bean implements Serializable {
 
     @OneToOne(mappedBy = "classId")
-    private ScheduleFeedbackBean scheduleFeedbackBean;
+    private ScheduledFeedbackBean scheduledFeedbackBean;
 
     private static final long serialVersionUID = 1L;
     @Expose
@@ -64,6 +69,7 @@ public class ClassBean extends Bean implements Serializable {
     private String section;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "classId")
     private Collection<CsfBean> csfBeanCollection;
+    @Expose
     @JoinColumn(name = "department_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private DepartmentBean departmentId;
@@ -157,29 +163,15 @@ public class ClassBean extends Bean implements Serializable {
         return "beans.ClassBean[ id=" + id + " ]";
     }
 
+    public ScheduledFeedbackBean getScheduledFeedbackBean() {
+        return scheduledFeedbackBean;
+    }
+
+    public void setScheduledFeedbackBean(ScheduledFeedbackBean scheduledFeedbackBean) {
+        this.scheduledFeedbackBean = scheduledFeedbackBean;
+    }
+
     public void persist(Object object) {
-        EntityManager em = getEntityManager();
-        try {
-            em.getTransaction().begin();
-            em.persist(object);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
-            em.getTransaction().rollback();
-        } finally {
-            em.close();
-        }
-    }
-
-    public ScheduleFeedbackBean getScheduleFeedbackBean() {
-        return scheduleFeedbackBean;
-    }
-
-    public void setScheduleFeedbackBean(ScheduleFeedbackBean scheduleFeedbackBean) {
-        this.scheduleFeedbackBean = scheduleFeedbackBean;
-    }
-
-    public void persist1(Object object) {
         EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
@@ -197,5 +189,51 @@ public class ClassBean extends Bean implements Serializable {
         TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findByDepartmentId", ClassBean.class);
         query.setParameter("departmentId", departmentId);
         return query.getResultList();
+    }
+
+    public List<ClassBean> findClassByDepartmentIdNotInScheduledFeedback() {
+        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findClassByDepartmentIdNotInScheduledFeedback", ClassBean.class);
+        query.setParameter("departmentId", departmentId);
+        return query.getResultList();
+    }
+
+    public List<ClassBean> findClassByDepartmentIdInScheduledFeedback() {
+        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findClassByDepartmentIdInScheduledFeedback", ClassBean.class);
+        query.setParameter("departmentId", departmentId);
+        return query.getResultList();
+    }
+
+    public String getClassCodeById() {
+        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findById", ClassBean.class);
+        query.setParameter("id", id);
+        ClassBean cb = null;
+        try {
+            cb = query.getSingleResult();
+        } catch (NoResultException e) {
+            LogManager.log("No result found (ClassBean:getClassCodeById()) for id " + id + " " + e);
+        }
+        String courseCode = cb.departmentId.getCourseId().getCourseCode();
+        String departmentCode = cb.departmentId.getDepartmentCode();
+        if (cb.section == null) {
+            cb.section = "";
+        }
+        String classCode = courseCode + cb.year + departmentCode + cb.section;
+        return classCode;
+    }
+
+    public ClassBean findById() {
+        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findById", ClassBean.class);
+        query.setParameter("id", id);
+        ClassBean cb = null;
+        try {
+            cb = query.getSingleResult();
+        } catch (NoResultException e) {
+            LogManager.log("Class not found\nId:" + this.id);
+        } catch (NonUniqueResultException e) {
+            LogManager.log("More than one Class details found\nId:" + this.id);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in ClassBean::findById()\n" + e.getMessage());
+        }
+        return cb;
     }
 }

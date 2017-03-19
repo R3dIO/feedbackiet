@@ -1,3 +1,4 @@
+<%@page import="managers.UtilsManager"%>
 <div class="container-fluid">
     <div class="row">
         <!--<div class="col-12">-->
@@ -7,14 +8,26 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarText">
                 <ul class="navbar-nav mr-auto">
-                    <li class="nav-item ${param.home}">
-                        <a class="nav-link" href="${param.relative_root_path}Home.jsp">Home <span class="sr-only">(current)</span></a>
+                    <li class="nav-item ${param.student}">
+                        <a class="nav-link" href="${param.relative_root_path}student/Home.jsp">Student</a>
                     </li>
-                    <li class="nav-item ${param.features}">
-                        <a class="nav-link" href="${param.relative_root_path}SchedulerLogin.jsp">Scheduler</a>
+                    <li class="nav-item ${param.admin}">
+                        <a class="nav-link" href="${param.relative_root_path}<%=UtilsManager.getHomeUrl("admin")%>">Admin</a>
                     </li>
-                    <li class="nav-item ${param.pricing}">
-                        <a class="nav-link" href="#">Pricing</a>
+                    <li class="nav-item ${param.director}">
+                        <a class="nav-link" href="${param.relative_root_path}<%=UtilsManager.getHomeUrl("director")%>">Director</a>
+                    </li>
+                    <li class="nav-item ${param.hod}">
+                        <a class="nav-link" href="${param.relative_root_path}<%=UtilsManager.getHomeUrl("hod")%>">HOD</a>
+                    </li>
+                    <li class="nav-item ${param.faculty}">
+                        <a class="nav-link" href="${param.relative_root_path}<%=UtilsManager.getHomeUrl("faculty")%>">Faculty</a>
+                    </li>
+                    <li class="nav-item ${param.scheduler}">
+                        <a class="nav-link" href="${param.relative_root_path}<%=UtilsManager.getHomeUrl("scheduler")%>">Scheduler</a>
+                    </li>
+                    <li class="nav-item ${param.logout}">
+                        <a class="nav-link" href="${param.logout_url}">Logout</a>
                     </li>
                 </ul>
                 <!--                    <span class="navbar-text">

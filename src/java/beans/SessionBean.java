@@ -7,19 +7,29 @@ package beans;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.OneToMany;
+import javax.persistence.Persistence;
 import javax.persistence.Table;
+import javax.persistence.TypedQuery;
+import javax.websocket.Session;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import managers.LogManager;
 
 /**
  *
@@ -34,7 +44,7 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "SessionBean.findByFromYear", query = "SELECT s FROM SessionBean s WHERE s.fromYear = :fromYear")
     , @NamedQuery(name = "SessionBean.findByToYear", query = "SELECT s FROM SessionBean s WHERE s.toYear = :toYear")
     , @NamedQuery(name = "SessionBean.findBySemType", query = "SELECT s FROM SessionBean s WHERE s.semType = :semType")})
-public class SessionBean implements Serializable {
+public class SessionBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -133,5 +143,35 @@ public class SessionBean implements Serializable {
     public String toString() {
         return "beans.SessionBean[ id=" + id + " ]";
     }
-    
+
+    public void persist(Object object) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(object);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
+        }
+    }
+
+    public SessionBean findById() {
+        TypedQuery<SessionBean> query = getEntityManager().createNamedQuery("SessionBean.findById", SessionBean.class);
+        query.setParameter("id", id);
+        SessionBean sb = null;
+        try {
+            sb = query.getSingleResult();
+        } catch (NoResultException e) {
+            LogManager.log("No result found (SessionBean:findById()) for id " + id + " " + e);
+            return null;
+        } catch (NonUniqueResultException e) {
+            LogManager.log("More than one result found (SessionBean:findById()) for id " + id + " " + e);
+            return null;
+        }
+        return sb;
+    }
+
 }

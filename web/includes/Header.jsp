@@ -9,7 +9,7 @@
         <div class="col-8 text-uppercase text-white">
             <div class="h2 college-name text-capitalize">Institute Of Engineering And Technology</div>
             <div class="row">
-                <div class="offset-6 col-3 text-gray-dark">Feedback SYstem</div>
+                <div class="offset-6 col-3 ">Feedback System</div>
             </div>
         </div>
     </div>

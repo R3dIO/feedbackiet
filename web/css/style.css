@@ -15,3 +15,6 @@
 .navbar{
     width: 100%;
 }
+.hide-logout-button{
+    display:none;
+}

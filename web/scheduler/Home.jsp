@@ -1,3 +1,4 @@
+<%@page import="managers.UtilsManager"%>
 <%
     String relativeRootPath = "../";
 %>
@@ -13,8 +14,8 @@
 
 <%
     SessionManager sm = new SessionManager(request, response, false);
-    String onFailUrl = relativeRootPath + "SchedulerLogin.jsp";
-    if (!sm.checkSchedulerSession(onFailUrl)) {
+    if (!sm.isSchedulerSession()) {
+        response.sendRedirect(relativeRootPath + UtilsManager.getLoginUrl("scheduler"));
         return;
     }
 %>
@@ -28,23 +29,43 @@
         </jsp:include>
     </head>
     <body>
+        <%
+            String logoutUrl = relativeRootPath + "LogoutServlet?type=scheduler";
+        %>
 
         <jsp:include page="../includes/Header.jsp" >
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
+        <!--Check below file to see parameters functionality-->
         <jsp:include page="../includes/Navbar.jsp">
-            <jsp:param name="home" value="active"/>
-            <jsp:param name="features" value=""/>
-            <jsp:param name="pricing" value=""/>
+            <jsp:param name="faculty" value=""/>
+            <jsp:param name="scheduler" value="active"/>
+            <jsp:param name="logout_url" value="<%=logoutUrl%>"/>
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
         <div class="container text-center">
             <hr>
             Welcome <%=sm.getSchedulerName()%> as Scheduler
             <hr>
-            <div class="row text-center text-capitalize">
-                <div class="col-12">
-                    <a href="ScheduleFeedback.jsp" class="btn btn-info">Schedule A Feedback</a>
+            <div class="row text-center ">
+                <div class="col-4">
+                    <a href="ScheduleFeedback.jsp" class="btn btn-info">Schedule feedback for a class</a>
+                </div>
+                <div class="col-4">
+                    <a href="ScheduleFeedback.jsp?edit" class="btn btn-info">Edit a feedback schedule</a>
+                </div>
+                <div class="col-4">
+                    <a href="ScheduleFeedback.jsp?delete" class="btn btn-info">Delete a feedback schedule</a>
+                </div>
+            </div>
+            <hr>
+            <div class="row text-center ">
+                <div class="col-4">
+                    <a href="ViewScheduledFeedback.jsp" class="btn btn-info">View scheduled feedbacks</a>
+                </div>
+                <div class="col-4">
+                </div>
+                <div class="col-4">
                 </div>
             </div>
         </div>

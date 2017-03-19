@@ -1,3 +1,4 @@
+<%@page import="managers.UtilsManager"%>
 <%@page import="managers.LogManager"%>
 <%@page import="java.io.IOException"%>
 <%@page import="managers.SessionManager"%>
@@ -12,9 +13,9 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%
     SessionManager sm = new SessionManager(request, response, false);
-    String onFailUrl = relativeRootPath + "Home.jsp";
-    if (!sm.checkFacultySession(onFailUrl)) {
-        return;
+    if (!sm.isFacultySession()) {
+           response.sendRedirect(relativeRootPath + UtilsManager.getLoginUrl("faculty"));
+     return;
     }
 %>
 
@@ -29,13 +30,16 @@
     </head>
     <body>
 
+        <%
+            String logoutUrl = relativeRootPath + "LogoutServlet?type=faculty";
+        %>
         <jsp:include page="../includes/Header.jsp" >
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
+        <!--Check below file to see parameters functionality-->
         <jsp:include page="../includes/Navbar.jsp">
-            <jsp:param name="home" value="active"/>
-            <jsp:param name="features" value=""/>
-            <jsp:param name="pricing" value=""/>
+            <jsp:param name="faculty" value="active"/>
+            <jsp:param name="logout_url" value="<%=logoutUrl%>"/>
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
         <div class="container text-center">

@@ -45,7 +45,7 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "DepartmentBean.findByDepartmentName", query = "SELECT d FROM DepartmentBean d WHERE d.departmentName = :departmentName")
     ,@NamedQuery(name = "DepartmentBean.findByCourseId", query = "SELECT d FROM DepartmentBean d WHERE d.courseId = :courseId")})
 public class DepartmentBean extends Bean implements Serializable {
-
+    @Expose
     @JoinColumn(name = "course_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private CourseBean courseId;

@@ -1,9 +1,16 @@
 package managers;
 
+import beans.ClassBean;
+import beans.CourseBean;
+import beans.CsfBean;
+import beans.DepartmentBean;
 import beans.FacultyBean;
 import beans.LoginBean;
+import beans.ScheduledFeedbackBean;
 import beans.SchedulerBean;
-import java.io.IOException;
+import beans.SessionBean;
+import beans.SubjectBean;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -26,6 +33,9 @@ public class SessionManager {
 
     private void init(boolean createNewSession) {
         LogManager.log("SessionManager initiated!");
+        if (createNewSession) {
+            LogManager.log("New session created!");
+        }
         session = request.getSession(createNewSession);
     }
 
@@ -59,6 +69,25 @@ public class SessionManager {
         LogManager.log("Scheduler Name: " + scheduler.getName());
     }
 
+    public void startFeedbackSession(ScheduledFeedbackBean sfb) {
+        SessionBean currentSessionId = UtilsManager.getCurrentSessionId();
+        CsfBean csf = new CsfBean();
+        csf.setClassId(sfb.getClassId());
+        csf.setSessionId(currentSessionId);
+        List<CsfBean> listCsf = csf.findByClassIdAndSessionId();
+        session.setAttribute("feedback_session_id", session.getId());
+        session.setAttribute("feedback_class_id", sfb.getClassId().getId());
+        session.setAttribute("feedback_class_code", sfb.getClassId().getClassCodeById());
+        session.setAttribute("feedback_current_session_id", currentSessionId);
+        session.setAttribute("feedback_csf_list", listCsf);
+        LogManager.log("Feedback Session Started!");
+        LogManager.log("Feedback Session ID: " + session.getId());
+        LogManager.log("Feedback Class ID: " + sfb.getClassId().getId());
+        LogManager.log("Feedback Class code: " + sfb.getClassId().getClassCodeById());
+        LogManager.log("Feedback Current Session: " + currentSessionId);
+        LogManager.log("Feedback Csf list: " + listCsf);
+    }
+
     public void invalidateFacultySession() {
         session.setAttribute("faculty_session_id", null);
         session.setAttribute("faculty_id", null);
@@ -74,8 +103,18 @@ public class SessionManager {
         LogManager.log("Scheduler session invalidated");
     }
 
+    public void invalidateFeedbackSession() {
+        session.setAttribute("feedback_session_id", null);
+        session.setAttribute("feedback_class_id", null);
+        session.setAttribute("feedback_class_code", null);
+        session.setAttribute("feedback_current_session_id", null);
+        session.setAttribute("feedback_csf_list", null);
+        LogManager.log("Feedback session invalidated");
+    }
+
     public void invalidateAllSession() {
-        LogManager.log("Invalidating All Sessions");
+        //Invalidate session of faculty and scheduler
+        LogManager.log("Invalidating Sessions of faculty and scheduler");
         invalidateFacultySession();
         invalidateSchedulerSession();
     }
@@ -123,82 +162,10 @@ public class SessionManager {
         return false;
     }
 
-    public boolean checkAdminSession(String onFailUrl) throws IOException {
-        //Check for admin session return true on success else redirect to onFailUrl 
-        if (isAdminSession()) {
-            LogManager.log("Admin session check: Success");
+    public boolean isFeedbackSession() {
+        //Return true if feedback is started
+        if (session.getAttribute("feedback_session_id") != null && session.getAttribute("feedback_class_id") != null && session.getAttribute("feedback_current_session_id") != null) {
             return true;
-        } else {
-            try {
-                response.sendRedirect(onFailUrl);
-            } catch (IOException ex) {
-                LogManager.log("IOException in SessionManager::checkAdminSession(): " + ex);
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public boolean checkDirectorSession(String onFailUrl) throws IOException {
-        //Check for director session return true on success else redirect to onFailUrl 
-        if (isDirectorSession()) {
-            LogManager.log("Director session check: Success");
-            return true;
-        } else {
-            try {
-                response.sendRedirect(onFailUrl);
-            } catch (IOException ex) {
-                LogManager.log("IOException in SessionManager::checkDirectorSession(): " + ex);
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public boolean checkHODSession(String onFailUrl) throws IOException {
-        //Check for hod session return true on success else redirect to onFailUrl 
-        if (isHODSession()) {
-            LogManager.log("HOD session check: Success");
-            return true;
-        } else {
-            try {
-                response.sendRedirect(onFailUrl);
-            } catch (IOException ex) {
-                LogManager.log("IOException in SessionManager::checkHODSession(): " + ex);
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public boolean checkFacultySession(String onFailUrl) throws IOException {
-        //Check for faculty session return true on success else redirect to onFailUrl 
-        if (isFacultySession()) {
-            LogManager.log("Faculty session check: Success");
-            return true;
-        } else {
-            try {
-                response.sendRedirect(onFailUrl);
-            } catch (IOException ex) {
-                LogManager.log("IOException in SessionManager::checkFacultySession(): " + ex);
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public boolean checkSchedulerSession(String onFailUrl) throws IOException {
-        //Check for scheduler session return true on success else redirect to onFailUrl 
-        if (isSchedulerSession()) {
-            LogManager.log("Scheduler session check: Success");
-            return true;
-        } else {
-            try {
-                response.sendRedirect(onFailUrl);
-            } catch (IOException ex) {
-                LogManager.log("IOException in SessionManager::checkSchedulerSession(): " + ex);
-                return false;
-            }
         }
         return false;
     }
@@ -224,21 +191,64 @@ public class SessionManager {
         return null;
     }
 
-    public boolean logoutFaculty(String logoutUrl) {
-        invalidateFacultySession();
-        try {
-            response.sendRedirect(logoutUrl);
-        } catch (IOException ex) {
-            LogManager.log("IOException in SessionManager::logoutFaculty(): " + ex);
-            return false;
+    public List getCSFList() {
+        if (isFeedbackSession()) {
+            return (List) session.getAttribute("feedback_csf_list");
         }
-        LogManager.log("Faculty logout success");
-        return true;
+        return null;
     }
 
-    public boolean logoutScheduler() {
-        return false;
+    public void updateCSFList(List csfList) {
+        if (isFeedbackSession()) {
+            session.setAttribute("feedback_csf_list", csfList);
+            LogManager.log("Feedback CSF list updated!");
+        }
     }
+
+    public CsfBean getFeedbackCSFBean() {
+        if (isFeedbackSession()) {
+            //if it does not fetch all the details of class faculty and subject then findById function should be call from each one
+            return ((CsfBean) getCSFList().get(0));
+        }
+        return null;
+    }
+
+    public ClassBean getFeedbackClassBean() {
+        if (isFeedbackSession()) {
+            //if all the details are not found then findById function need to be called
+            return getFeedbackCSFBean().getClassId();
+        }
+        return null;
+    }
+
+    public DepartmentBean getFeedbackDepartmentBean() {
+        if (isFeedbackSession()) {
+            return getFeedbackClassBean().getDepartmentId();
+        }
+        return null;
+    }
+
+    public CourseBean getFeedbackCourseBean() {
+        if (isFeedbackSession()) {
+            return getFeedbackDepartmentBean().getCourseId();
+        }
+        return null;
+    }
+
+    public SubjectBean getFeedbackSubjectBean() {
+        if (isFeedbackSession()) {
+            return getFeedbackCSFBean().getSubjectId();
+        }
+        return null;
+    }
+
+    public FacultyBean getFeedbackFacultyBean() {
+        if (isFeedbackSession()) {
+            return getFeedbackCSFBean().getFacultyId();
+        }
+        return null;
+    }
+
 }
 
 /*

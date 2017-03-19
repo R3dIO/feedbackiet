@@ -5,10 +5,16 @@
  */
 package beans;
 
+import com.google.gson.annotations.Expose;
+import com.mysql.jdbc.StringUtils;
 import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -16,8 +22,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.Persistence;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import managers.LogManager;
+import org.apache.commons.lang3.StringEscapeUtils;
+import sun.net.util.IPAddressUtil;
 
 /**
  *
@@ -49,70 +59,91 @@ import javax.xml.bind.annotation.XmlRootElement;
     , @NamedQuery(name = "FeedbackBean.findByComment1", query = "SELECT f FROM FeedbackBean f WHERE f.comment1 = :comment1")
     , @NamedQuery(name = "FeedbackBean.findByComment2", query = "SELECT f FROM FeedbackBean f WHERE f.comment2 = :comment2")
     , @NamedQuery(name = "FeedbackBean.findByComment3", query = "SELECT f FROM FeedbackBean f WHERE f.comment3 = :comment3")})
-public class FeedbackBean implements Serializable {
+public class FeedbackBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    @Expose
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
+    @Expose
     @Basic(optional = false)
     @Column(name = "timestamp")
     private int timestamp;
+    @Expose
     @Column(name = "ip_address")
     private String ipAddress;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_1")
     private int attribute1;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_2")
     private int attribute2;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_3")
     private int attribute3;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_4")
     private int attribute4;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_5")
     private int attribute5;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_6")
     private int attribute6;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_7")
     private int attribute7;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_8")
     private int attribute8;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_9")
     private int attribute9;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_10")
     private int attribute10;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_11")
     private int attribute11;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_12")
     private int attribute12;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_13")
     private int attribute13;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_14")
     private int attribute14;
+    @Expose
     @Basic(optional = false)
     @Column(name = "attribute_15")
     private int attribute15;
+    @Expose
     @Basic(optional = false)
     @Column(name = "comment_1")
     private String comment1;
+    @Expose
     @Basic(optional = false)
     @Column(name = "comment_2")
     private String comment2;
+    @Expose
     @Basic(optional = false)
     @Column(name = "comment_3")
     private String comment3;
@@ -350,5 +381,81 @@ public class FeedbackBean implements Serializable {
     public String toString() {
         return "beans.FeedbackBean[ id=" + id + " ]";
     }
-    
+
+    public boolean persist(Object object) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(object);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
+        LogManager.log("New feedback added to db successfully!");
+        return true;
+    }
+
+    public boolean validateFields() {
+        if (attribute1 < 1 || attribute1 > 5) {
+            return false;
+        }
+        if (attribute2 < 1 || attribute2 > 5) {
+            return false;
+        }
+        if (attribute3 < 1 || attribute3 > 5) {
+            return false;
+        }
+        if (attribute4 < 1 || attribute4 > 5) {
+            return false;
+        }
+        if (attribute5 < 1 || attribute5 > 5) {
+            return false;
+        }
+        if (attribute6 < 1 || attribute6 > 5) {
+            return false;
+        }
+        if (attribute7 < 1 || attribute7 > 5) {
+            return false;
+        }
+        if (attribute8 < 1 || attribute8 > 5) {
+            return false;
+        }
+        if (attribute9 < 1 || attribute9 > 5) {
+            return false;
+        }
+        if (attribute10 < 1 || attribute10 > 5) {
+            return false;
+        }
+        if (attribute11 < 1 || attribute11 > 3) {
+            return false;
+        }
+        if (attribute12 < 1 || attribute12 > 3) {
+            return false;
+        }
+        if (attribute13 < 1 || attribute13 > 3) {
+            return false;
+        }
+        if (attribute14 < 1 || attribute14 > 3) {
+            return false;
+        }
+        if (attribute15 < 1 || attribute15 > 3) {
+            return false;
+        }
+        if (comment1.length() > 300) {
+            return false;
+        }
+        if (comment2.length() > 300) {
+            return false;
+        }
+        if (comment3.length() > 300) {
+            return false;
+        }
+        LogManager.log("Feedback validated successfully!");
+        return true;
+    }
+
 }
