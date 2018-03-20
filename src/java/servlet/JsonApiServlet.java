@@ -1,7 +1,9 @@
 package servlet;
 
 import beans.ClassBean;
+import beans.FacultyBean;
 import beans.ScheduledFeedbackBean;
+import beans.SubjectBean;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -35,6 +37,9 @@ public class JsonApiServlet extends HttpServlet {
         if (purpose.equalsIgnoreCase("findAllCourses")) {
             //Find All Courses
             out.print(jam.findAllCourses());
+        } else if (purpose.equalsIgnoreCase("findAllFaculty")) {
+            //Find All Faculty
+            out.print(jam.findAllFaculty());
         } else if (purpose.equalsIgnoreCase("findDepartmentByCourseId")) {
             //Find Departments of a Course
             Long courseId = Long.parseLong(request.getParameter("courseId"));
@@ -51,6 +56,13 @@ public class JsonApiServlet extends HttpServlet {
             //Find Classes of a Department which are not scheduled yet for a Feedback
             Long departmentId = Long.parseLong(request.getParameter("departmentId"));
             out.print(jam.findClassByDepartmentIdNotInScheduledFeedback(departmentId));
+        } else if (purpose.equalsIgnoreCase("findAllFeedbackEligibleClass")) {
+            //Find those class which can give feedback at current time
+            out.print(jam.findAllFeedbackEligibleClass());
+        } else if (purpose.equalsIgnoreCase("findSubjectNotAssosiatedWithClassByClassId")) {
+            //Find those subjects which are not in schema table using classId
+            Long classId = Long.parseLong(request.getParameter("classId"));
+            out.print(jam.findSubjectNotAssosiatedWithClassByClassId(classId));
         } else if (purpose.equalsIgnoreCase("scheduleClassFeedback")) {
             //Schedule a class for feedback i.e. add a record in scheduled_feedback_table
             //Also Edit a feedback schedule of a class i.e. update record
@@ -67,10 +79,11 @@ public class JsonApiServlet extends HttpServlet {
             ScheduledFeedbackBean sfb = new ScheduledFeedbackBean();
             sfb.setClassId(new ClassBean(Long.parseLong(request.getParameter("classId"))));
             out.print(jam.deleteFeedbackScheduleOfClass(sfb));
-        }else if(purpose.equalsIgnoreCase("findAllFeedbackEligibleClass")){
-            //Find those class which can give feedback at current time
-            out.print(jam.findAllFeedbackEligibleClass());
-        }
+        } else if (purpose.equalsIgnoreCase("findSubjectByFacultyId")) {
+            //find subjects taught by Faculty using faculty id 
+            FacultyBean fb = new FacultyBean(Long.parseLong(request.getParameter("facultyId")));
+            out.print(jam.findSubjectByFacultyId(fb));
+        } 
 
     }
 

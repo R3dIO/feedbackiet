@@ -6,15 +6,16 @@
 package beans;
 
 import com.google.gson.annotations.Expose;
-import com.mysql.jdbc.StringUtils;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -22,12 +23,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Persistence;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
 import javax.persistence.Table;
+import javax.persistence.TypedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 import managers.LogManager;
-import org.apache.commons.lang3.StringEscapeUtils;
-import sun.net.util.IPAddressUtil;
+import managers.UtilsManager;
 
 /**
  *
@@ -58,7 +61,16 @@ import sun.net.util.IPAddressUtil;
     , @NamedQuery(name = "FeedbackBean.findByAttribute15", query = "SELECT f FROM FeedbackBean f WHERE f.attribute15 = :attribute15")
     , @NamedQuery(name = "FeedbackBean.findByComment1", query = "SELECT f FROM FeedbackBean f WHERE f.comment1 = :comment1")
     , @NamedQuery(name = "FeedbackBean.findByComment2", query = "SELECT f FROM FeedbackBean f WHERE f.comment2 = :comment2")
-    , @NamedQuery(name = "FeedbackBean.findByComment3", query = "SELECT f FROM FeedbackBean f WHERE f.comment3 = :comment3")})
+    , @NamedQuery(name = "FeedbackBean.findByComment3", query = "SELECT f FROM FeedbackBean f WHERE f.comment3 = :comment3")
+    , @NamedQuery(name = "FeedbackBean.findSectionCFeedbackByCsfId", query = "SELECT f.comment1,f.comment2,f.comment3 FROM FeedbackBean f WHERE f.csfId=:csfId")
+    , @NamedQuery(name = "FeedbackBean.findSectionBFeedbackAttribute11ByCsfId", query = "SELECT f.attribute11 AS attribute11, COUNT(f.attribute11) AS count_attribute11 FROM FeedbackBean f WHERE f.csfId=:csfId GROUP BY f.csfId,f.attribute11")
+    , @NamedQuery(name = "FeedbackBean.findSectionBFeedbackAttribute12ByCsfId", query = "SELECT f.attribute12 AS attribute12, COUNT(f.attribute12) AS count_attribute12 FROM FeedbackBean f WHERE f.csfId=:csfId GROUP BY f.csfId,f.attribute12")
+    , @NamedQuery(name = "FeedbackBean.findSectionBFeedbackAttribute13ByCsfId", query = "SELECT f.attribute13 AS attribute13, COUNT(f.attribute13) AS count_attribute13 FROM FeedbackBean f WHERE f.csfId=:csfId GROUP BY f.csfId,f.attribute13")
+    , @NamedQuery(name = "FeedbackBean.findSectionBFeedbackAttribute14ByCsfId", query = "SELECT f.attribute14 AS attribute14, COUNT(f.attribute14) AS count_attribute14 FROM FeedbackBean f WHERE f.csfId=:csfId GROUP BY f.csfId,f.attribute14")
+    , @NamedQuery(name = "FeedbackBean.findSectionBFeedbackAttribute15ByCsfId", query = "SELECT f.attribute15 AS attribute15, COUNT(f.attribute15) AS count_attribute15 FROM FeedbackBean f WHERE f.csfId=:csfId GROUP BY f.csfId,f.attribute15")
+    , @NamedQuery(name = "FeedbackBean.findSectionAFeedbackByCsfId", query = "SELECT AVG(f.attribute1) as attribute1,AVG(f.attribute2) as attribute2,AVG(f.attribute3) as attribute3,AVG(f.attribute4) as attribute4,AVG(f.attribute5) as attribute5,AVG(f.attribute6) as attribute6,AVG(f.attribute7) as attribute7,AVG(f.attribute8) as attribute8,AVG(f.attribute9) as attribute9,AVG(f.attribute10) as attribute10 FROM FeedbackBean f WHERE f.csfId=:csfId GROUP BY f.csfId")})
+//, @NamedQuery(name = "FeedbackBean.findSectionBFeedbackByCsfId", query = "SELECT COUNT(f.attribute11) FROM FeedbackBean f,FeedbackBean f1 where f1.id=f.id WHERE f.csfId=:csfId GROUP BY f.csfId")
+//COUNT(f.attribute11) as attribute11_yes,COUNT(f.attribute11) as attribute11_no,COUNT(f.attribute11) as attribute11_no_comment,COUNT(f.attribute12) as attribute12_yes,COUNT(f.attribute12) as attribute12_no,COUNT(f.attribute12) as attribute12_no_comment,COUNT(f.attribute13) as attribute13_yes,COUNT(f.attribute13) as attribute13_no,COUNT(f.attribute13) as attribute13_no_comment,COUNT(f.attribute14) as attribute14_yes,COUNT(f.attribute14) as attribute14_no,COUNT(f.attribute14) as attribute14_no_comment,COUNT(f.attribute15) as attribute15_yes,COUNT(f.attribute15) as attribute15_no,COUNT(f.attribute15) as attribute15_no_comment
 public class FeedbackBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -382,11 +394,11 @@ public class FeedbackBean extends Bean implements Serializable {
         return "beans.FeedbackBean[ id=" + id + " ]";
     }
 
-    public boolean persist(Object object) {
+    public boolean persist(FeedbackBean feedback) {
         EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
-            em.persist(object);
+            em.persist(feedback);
             em.getTransaction().commit();
         } catch (Exception e) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
@@ -396,6 +408,7 @@ public class FeedbackBean extends Bean implements Serializable {
             em.close();
         }
         LogManager.log("New feedback added to db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(feedback));
         return true;
     }
 
@@ -445,17 +458,184 @@ public class FeedbackBean extends Bean implements Serializable {
         if (attribute15 < 1 || attribute15 > 3) {
             return false;
         }
-        if (comment1.length() > 300) {
+        if (comment1 == null || comment1.length() > 300) {
             return false;
         }
-        if (comment2.length() > 300) {
+        if (comment2 == null || comment2.length() > 300) {
             return false;
         }
-        if (comment3.length() > 300) {
+        if (comment3 == null || comment3.length() > 300) {
             return false;
         }
         LogManager.log("Feedback validated successfully!");
         return true;
     }
 
+    public SectionAFeedback findSectionAFeedbackByCsfId() {
+        Query query = getEntityManager().createNamedQuery("FeedbackBean.findSectionAFeedbackByCsfId", SectionAFeedback.class);
+        query.setParameter("csfId", csfId);
+        SectionAFeedback safb = null;
+        try {
+            Object[] feedback = (Object[]) query.getSingleResult();
+            int i = 0;
+            safb = new SectionAFeedback((Double) feedback[i++], (Double) feedback[i++], (Double) feedback[i++], (Double) feedback[i++], (Double) feedback[i++], (Double) feedback[i++], (Double) feedback[i++], (Double) feedback[i++], (Double) feedback[i++], (Double) feedback[i++]);
+        } catch (NoResultException e) {
+            LogManager.log("No SectionAFeedback found\nId:" + this.csfId);
+        } catch (NonUniqueResultException e) {
+            LogManager.log("More than one SectionAFeedback details found\nId:" + this.csfId);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in FeedbackBean::findSectionAFeedbackByCsfId()\n" + e.getMessage());
+        }
+        return safb;
+    }
+
+    public SectionBFeedback findSectionBFeedbackByCsfId() {
+        SectionBFeedback sbfb = new SectionBFeedback(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L);
+        Query query = getEntityManager().createNamedQuery("FeedbackBean.findSectionBFeedbackAttribute11ByCsfId");
+        query.setParameter("csfId", csfId);
+        try {
+            List<Object[]> resultList = query.getResultList();
+            for (Object[] row : resultList) {
+                switch ((Integer) row[0]) {
+                    case 1:
+                        sbfb.setAttribute11NoComment(sbfb.getAttribute11NoComment() + (Long) row[1]);
+                        break;
+                    case 2:
+                        sbfb.setAttribute11No(sbfb.getAttribute11No() + (Long) row[1]);
+                        break;
+                    case 3:
+                        sbfb.setAttribute11Yes(sbfb.getAttribute11Yes() + (Long) row[1]);
+                        break;
+                    default:
+                }
+            }
+        } catch (NoResultException e) {
+            LogManager.log("No SectionBFeedbackAttribute11 found\nId:" + this.csfId);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in FeedbackBean::findSectionBFeedbackAttribute11ByCsfId()\n" + e.getMessage());
+        }
+        query = getEntityManager().createNamedQuery("FeedbackBean.findSectionBFeedbackAttribute12ByCsfId");
+        query.setParameter("csfId", csfId);
+        try {
+            List<Object[]> resultList = query.getResultList();
+            for (Object[] row : resultList) {
+                switch ((Integer) row[0]) {
+                    case 1:
+                        sbfb.setAttribute12NoComment(sbfb.getAttribute12NoComment() + (Long) row[1]);
+                        break;
+                    case 2:
+                        sbfb.setAttribute12No(sbfb.getAttribute12No() + (Long) row[1]);
+                        break;
+                    case 3:
+                        sbfb.setAttribute12Yes(sbfb.getAttribute12Yes() + (Long) row[1]);
+                        break;
+                    default:
+                }
+            }
+        } catch (NoResultException e) {
+            LogManager.log("No SectionBFeedbackAttribute12 found\nId:" + this.csfId);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in FeedbackBean::findSectionBFeedbackAttribute12ByCsfId()\n" + e.getMessage());
+        }
+
+        query = getEntityManager().createNamedQuery("FeedbackBean.findSectionBFeedbackAttribute13ByCsfId");
+        query.setParameter("csfId", csfId);
+        try {
+            List<Object[]> resultList = query.getResultList();
+            for (Object[] row : resultList) {
+                switch ((Integer) row[0]) {
+                    case 1:
+                        sbfb.setAttribute13NoComment(sbfb.getAttribute13NoComment() + (Long) row[1]);
+                        break;
+                    case 2:
+                        sbfb.setAttribute13No(sbfb.getAttribute13No() + (Long) row[1]);
+                        break;
+                    case 3:
+                        sbfb.setAttribute13Yes(sbfb.getAttribute13Yes() + (Long) row[1]);
+                        break;
+                    default:
+                }
+            }
+        } catch (NoResultException e) {
+            LogManager.log("No SectionBFeedbackAttribute13 found\nId:" + this.csfId);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in FeedbackBean::findSectionBFeedbackAttribute13ByCsfId()\n" + e.getMessage());
+        }
+
+        query = getEntityManager().createNamedQuery("FeedbackBean.findSectionBFeedbackAttribute14ByCsfId");
+        query.setParameter("csfId", csfId);
+        try {
+            List<Object[]> resultList = query.getResultList();
+            for (Object[] row : resultList) {
+                switch ((Integer) row[0]) {
+                    case 1:
+                        sbfb.setAttribute14NoComment(sbfb.getAttribute14NoComment() + (Long) row[1]);
+                        break;
+                    case 2:
+                        sbfb.setAttribute14No(sbfb.getAttribute14No() + (Long) row[1]);
+                        break;
+                    case 3:
+                        sbfb.setAttribute14Yes(sbfb.getAttribute14Yes() + (Long) row[1]);
+                        break;
+                    default:
+                }
+            }
+        } catch (NoResultException e) {
+            LogManager.log("No SectionBFeedbackAttribute14 found\nId:" + this.csfId);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in FeedbackBean::findSectionBFeedbackAttribute14ByCsfId()\n" + e.getMessage());
+        }
+
+        query = getEntityManager().createNamedQuery("FeedbackBean.findSectionBFeedbackAttribute15ByCsfId");
+        query.setParameter("csfId", csfId);
+        try {
+            List<Object[]> resultList = query.getResultList();
+            for (Object[] row : resultList) {
+                switch ((Integer) row[0]) {
+                    case 1:
+                        sbfb.setAttribute15NoComment(sbfb.getAttribute15NoComment() + (Long) row[1]);
+                        break;
+                    case 2:
+                        sbfb.setAttribute15No(sbfb.getAttribute15No() + (Long) row[1]);
+                        break;
+                    case 3:
+                        sbfb.setAttribute15Yes(sbfb.getAttribute15Yes() + (Long) row[1]);
+                        break;
+                    default:
+                }
+            }
+        } catch (NoResultException e) {
+            LogManager.log("No SectionBFeedbackAttribute15 found\nId:" + this.csfId);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in FeedbackBean::findSectionBFeedbackAttribute15ByCsfId()\n" + e.getMessage());
+        }
+
+        return sbfb;
+    }
+
+    public SectionCFeedback findSectionCFeedbackByCsfId() {
+        Query query = getEntityManager().createNamedQuery("FeedbackBean.findSectionCFeedbackByCsfId");
+        query.setParameter("csfId", csfId);
+        SectionCFeedback scfb = null;
+        try {
+            List<Object[]> resultList = query.getResultList();
+            ArrayList<String> comment1;
+            ArrayList<String> comment2;
+            ArrayList<String> comment3;
+            comment1 = new ArrayList<>();
+            comment2 = new ArrayList<>();
+            comment3 = new ArrayList<>();
+            for (Object[] row : resultList) {
+                comment1.add((String) row[0]);
+                comment2.add((String) row[1]);
+                comment3.add((String) row[2]);
+            }
+            scfb = new SectionCFeedback(comment1, comment2, comment3);
+        } catch (NoResultException e) {
+            LogManager.log("No SectionCFeedback found\nId:" + this.csfId);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in FeedbackBean::findSectionCFeedbackByCsfId()\n" + e.getMessage());
+        }
+        return scfb;
+    }
 }

@@ -5,6 +5,7 @@
  */
 package beans;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,10 +37,12 @@ import managers.LogManager;
 public class VariableBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    @Expose
     @Id
     @Basic(optional = false)
     @Column(name = "name")
     private String name;
+    @Expose
     @Column(name = "value")
     private String value;
 

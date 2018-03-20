@@ -208,7 +208,11 @@ public class SessionManager {
     public CsfBean getFeedbackCSFBean() {
         if (isFeedbackSession()) {
             //if it does not fetch all the details of class faculty and subject then findById function should be call from each one
-            return ((CsfBean) getCSFList().get(0));
+            if (getCSFList().size() > 0) {
+                return ((CsfBean) getCSFList().get(0));
+            } else {
+                return null;
+            }
         }
         return null;
     }

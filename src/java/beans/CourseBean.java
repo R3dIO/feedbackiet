@@ -25,6 +25,7 @@ import javax.persistence.TypedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import managers.LogManager;
+import managers.UtilsManager;
 
 /**
  *
@@ -144,18 +145,44 @@ public class CourseBean extends Bean implements Serializable {
         this.departmentBeanCollection = departmentBeanCollection;
     }
 
-    public void persist(Object object) {
+    public boolean persist(CourseBean cb) {
         EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
-            em.persist(object);
+            em.persist(cb);
             em.getTransaction().commit();
         } catch (Exception e) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            LogManager.log("Exception in adding course: " + e);
+            LogManager.log("Course: " + UtilsManager.beanAsJsonString(cb));
             em.getTransaction().rollback();
+            return false;
         } finally {
             em.close();
         }
+        LogManager.log("Course added to db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(cb));
+        return true;
+    }
+
+    public boolean merge(CourseBean cb) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(cb);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            LogManager.log("Exception in editing course: " + e);
+            LogManager.log("Course: " + UtilsManager.beanAsJsonString(cb));
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
+        LogManager.log("Course edited to db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(cb));
+        return true;
     }
 
     public List<CourseBean> findAll() {

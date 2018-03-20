@@ -5,6 +5,7 @@
  */
 package beans;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -47,17 +48,21 @@ import managers.LogManager;
 public class SessionBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    @Expose
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
+    @Expose
     @Basic(optional = false)
     @Column(name = "from_year")
     private int fromYear;
+    @Expose
     @Basic(optional = false)
     @Column(name = "to_year")
     private int toYear;
+    @Expose
     @Basic(optional = false)
     @Column(name = "sem_type")
     private String semType;

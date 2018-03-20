@@ -2,8 +2,11 @@ package managers;
 
 import beans.ClassBean;
 import beans.CourseBean;
+import beans.CsfBean;
 import beans.DepartmentBean;
+import beans.FacultyBean;
 import beans.ScheduledFeedbackBean;
+import beans.SubjectBean;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -38,6 +41,12 @@ public class JsonApiManager {
         return convertBeanToJson(cbList);
     }
 
+    public String findAllFaculty() {
+        FacultyBean helperFB = new FacultyBean();
+        List<FacultyBean> fbList = helperFB.findAll();
+        return convertBeanToJson(fbList);
+    }
+
     public String findDepartmentByCourseId(Long courseId) {
         CourseBean cb = new CourseBean(courseId);
         DepartmentBean helperDB = new DepartmentBean();
@@ -70,6 +79,24 @@ public class JsonApiManager {
         return convertBeanToJson(cbList);
     }
 
+    public String findAllFeedbackEligibleClass() {
+        //Those classes which can give feeback now 
+        List<ClassBean> list = new ArrayList();
+        int currentTime = UtilsManager.getCurrentTimestampInSeconds();
+        List<ScheduledFeedbackBean> findAllEligibleSFB = new ScheduledFeedbackBean().findAllFeedbackEligibleClass(currentTime);
+        for (ScheduledFeedbackBean sfb : findAllEligibleSFB) {
+            list.add(sfb.getClassId());
+        }
+        return convertBeanToJson(list);
+    }
+
+    public String findSubjectNotAssosiatedWithClassByClassId(long classId) {
+        //Find those subjects which are not in schema table using classId
+        ClassBean cb = new ClassBean(classId);
+        List<SubjectBean> list = new SubjectBean().findSubjectNotAssosiatedWithClassByClassId(cb);
+        return convertBeanToJson(list);
+    }
+
     public String scheduleClassFeedback(ScheduledFeedbackBean sfb) {
         Gson gson = new Gson();
         boolean success = sfb.scheduleClassFeedback();
@@ -96,15 +123,13 @@ public class JsonApiManager {
         return gson.toJson(jo);
     }
 
-    public String findAllFeedbackEligibleClass() {
-        Gson gson = new Gson();
-        //Those classes which can give feeback now 
-        List<ClassBean> list = new ArrayList();
-        int currentTime = UtilsManager.getCurrentTimestampInSeconds();
-        List<ScheduledFeedbackBean> findAllEligibleSFB = new ScheduledFeedbackBean().findAllFeedbackEligibleClass(currentTime);
-        for (ScheduledFeedbackBean sfb : findAllEligibleSFB) {
-            list.add(sfb.getClassId());
-        }
-        return convertBeanToJson(list);
+    public String findSubjectByFacultyId(FacultyBean fb) {
+        CsfBean csf = new CsfBean();
+        csf.setFacultyId(fb);
+        csf.setSessionId(UtilsManager.getCurrentSessionId());
+        List<SubjectBean> sbList = csf.findSubjectByFacultyId();
+        return convertBeanToJson(sbList);
     }
+
+
 }

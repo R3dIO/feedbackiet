@@ -49,20 +49,13 @@ public class FeedbackServlet extends HttpServlet {
                 String location = UtilsManager.getHomeUrl("student");
                 //delete the zeroth index csf 
                 csfList.remove(0);
+                //updating the session csf list with the above csf list
                 sm.updateCSFList(csfList);
-                if (csfList.size() > 0) {
-                    //if some csf remaining then redirect to studentFeedbackPage
-                    LogManager.log("Redirect to studentFeedbackPage!");
-                    location = UtilsManager.getStudentFeedbackUrl();
-                } else {
-                    //No more CSF means Redirect to thank you page
-                    sm.invalidateFeedbackSession();
-                    LogManager.log("Feedback done! Redirect to Thank you page");
-                    location = UtilsManager.getThankYouPage();
-                }
+                LogManager.log("Redirect to studentFeedbackPage!");
+                location = UtilsManager.getStudentFeedbackUrl();
                 resp.sendRedirect(location);
             } else {
-                super.doPost(req, resp);
+//                super.doPost(req, resp);
             }
         } else {
             super.doPost(req, resp);

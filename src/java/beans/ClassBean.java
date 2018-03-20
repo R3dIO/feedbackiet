@@ -20,6 +20,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -32,6 +34,7 @@ import javax.persistence.TypedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import managers.LogManager;
+import managers.UtilsManager;
 
 /**
  *
@@ -49,9 +52,6 @@ import managers.LogManager;
     , @NamedQuery(name = "ClassBean.findClassByDepartmentIdNotInScheduledFeedback", query = "SELECT c FROM ClassBean c WHERE c.departmentId = :departmentId AND NOT EXISTS (SELECT s FROM ScheduledFeedbackBean s WHERE s.classId = c)")
     , @NamedQuery(name = "ClassBean.findClassByDepartmentIdInScheduledFeedback", query = "SELECT c FROM ClassBean c WHERE c.departmentId = :departmentId AND EXISTS (SELECT s FROM ScheduledFeedbackBean s WHERE s.classId = c)")})
 public class ClassBean extends Bean implements Serializable {
-
-    @OneToOne(mappedBy = "classId")
-    private ScheduledFeedbackBean scheduledFeedbackBean;
 
     private static final long serialVersionUID = 1L;
     @Expose
@@ -76,6 +76,15 @@ public class ClassBean extends Bean implements Serializable {
     @JoinColumn(name = "faculty_id", referencedColumnName = "id")
     @ManyToOne
     private FacultyBean facultyId;
+
+    @JoinTable(name = "schema_table", joinColumns = {
+        @JoinColumn(name = "class_id", referencedColumnName = "id")}, inverseJoinColumns = {
+        @JoinColumn(name = "subject_id", referencedColumnName = "id")})
+    @ManyToMany
+    private Collection<SubjectBean> subjectBeanCollection;
+
+    @OneToOne(mappedBy = "classId")
+    private ScheduledFeedbackBean scheduledFeedbackBean;
 
     public ClassBean() {
     }
@@ -171,36 +180,51 @@ public class ClassBean extends Bean implements Serializable {
         this.scheduledFeedbackBean = scheduledFeedbackBean;
     }
 
-    public void persist(Object object) {
+    @XmlTransient
+    public Collection<SubjectBean> getSubjectBeanCollection() {
+        return subjectBeanCollection;
+    }
+
+    public void setSubjectBeanCollection(Collection<SubjectBean> subjectBeanCollection) {
+        this.subjectBeanCollection = subjectBeanCollection;
+    }
+
+    public boolean persist(ClassBean cb) {
         EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
-            em.persist(object);
+            em.persist(cb);
             em.getTransaction().commit();
         } catch (Exception e) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
             em.getTransaction().rollback();
+            return false;
         } finally {
             em.close();
         }
+        LogManager.log("Class added to db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(cb));
+        return true;
     }
 
-    public List<ClassBean> findClassByDepartmentId() {
-        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findByDepartmentId", ClassBean.class);
-        query.setParameter("departmentId", departmentId);
-        return query.getResultList();
-    }
-
-    public List<ClassBean> findClassByDepartmentIdNotInScheduledFeedback() {
-        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findClassByDepartmentIdNotInScheduledFeedback", ClassBean.class);
-        query.setParameter("departmentId", departmentId);
-        return query.getResultList();
-    }
-
-    public List<ClassBean> findClassByDepartmentIdInScheduledFeedback() {
-        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findClassByDepartmentIdInScheduledFeedback", ClassBean.class);
-        query.setParameter("departmentId", departmentId);
-        return query.getResultList();
+    public boolean merge(ClassBean cb) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(cb);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            LogManager.log("Exception in editing class: " + e);
+            LogManager.log("Class: " + UtilsManager.beanAsJsonString(cb));
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
+        LogManager.log("Class added to db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(cb));
+        return true;
     }
 
     public String getClassCodeById() {
@@ -221,6 +245,29 @@ public class ClassBean extends Bean implements Serializable {
         return classCode;
     }
 
+    public List<ClassBean> findAll() {
+        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findAll", ClassBean.class);
+        return query.getResultList();
+    }
+
+    public List<ClassBean> findClassByDepartmentId() {
+        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findByDepartmentId", ClassBean.class);
+        query.setParameter("departmentId", departmentId);
+        return query.getResultList();
+    }
+
+    public List<ClassBean> findClassByDepartmentIdNotInScheduledFeedback() {
+        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findClassByDepartmentIdNotInScheduledFeedback", ClassBean.class);
+        query.setParameter("departmentId", departmentId);
+        return query.getResultList();
+    }
+
+    public List<ClassBean> findClassByDepartmentIdInScheduledFeedback() {
+        TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findClassByDepartmentIdInScheduledFeedback", ClassBean.class);
+        query.setParameter("departmentId", departmentId);
+        return query.getResultList();
+    }
+
     public ClassBean findById() {
         TypedQuery<ClassBean> query = getEntityManager().createNamedQuery("ClassBean.findById", ClassBean.class);
         query.setParameter("id", id);
@@ -236,4 +283,25 @@ public class ClassBean extends Bean implements Serializable {
         }
         return cb;
     }
+
+    public boolean deleteById(ClassBean cb) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            ClassBean removeClass = em.find(ClassBean.class, cb.getId());
+            em.remove(removeClass);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            LogManager.log("Exception in ClassBean::deleteById(): " + e.getMessage());
+            LogManager.log(UtilsManager.beanAsJsonString(cb));
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
+        LogManager.log("Class deleted from db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(cb));
+        return true;
+    }
+
 }

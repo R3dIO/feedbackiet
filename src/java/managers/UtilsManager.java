@@ -1,7 +1,9 @@
 package managers;
 
+import beans.Bean;
 import beans.SessionBean;
 import beans.VariableBean;
+import com.google.gson.GsonBuilder;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -130,4 +132,11 @@ public class UtilsManager {
         row += "</tr>\n";
         return row;
     }
+
+    public static String beanAsJsonString(Bean bean) {
+        GsonBuilder gb = new GsonBuilder();
+        gb.excludeFieldsWithoutExposeAnnotation();
+        return gb.create().toJson(bean);
+    }
+
 }

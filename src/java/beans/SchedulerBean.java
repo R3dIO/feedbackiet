@@ -5,6 +5,7 @@
  */
 package beans;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,13 +41,16 @@ import managers.LogManager;
 public class SchedulerBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    @Expose
     @Id
     @Basic(optional = false)
     @Column(name = "username")
     private String username;
+    @Expose
     @Basic(optional = false)
     @Column(name = "password")
     private String password;
+    @Expose
     @Basic(optional = false)
     @Column(name = "name")
     private String name;

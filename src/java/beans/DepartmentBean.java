@@ -24,12 +24,16 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.OneToMany;
 import javax.persistence.Persistence;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import managers.LogManager;
+import managers.UtilsManager;
 
 /**
  *
@@ -45,6 +49,7 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "DepartmentBean.findByDepartmentName", query = "SELECT d FROM DepartmentBean d WHERE d.departmentName = :departmentName")
     ,@NamedQuery(name = "DepartmentBean.findByCourseId", query = "SELECT d FROM DepartmentBean d WHERE d.courseId = :courseId")})
 public class DepartmentBean extends Bean implements Serializable {
+
     @Expose
     @JoinColumn(name = "course_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
@@ -169,18 +174,44 @@ public class DepartmentBean extends Bean implements Serializable {
         this.courseId = courseId;
     }
 
-    public void persist(Object object) {
+    public boolean persist(DepartmentBean db) {
         EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
-            em.persist(object);
+            em.persist(db);
             em.getTransaction().commit();
         } catch (Exception e) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            LogManager.log("Exception in adding department: " + e);
+            LogManager.log("Department: " + UtilsManager.beanAsJsonString(db));
             em.getTransaction().rollback();
+            return false;
         } finally {
             em.close();
         }
+        LogManager.log("Department added to db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(db));
+        return true;
+    }
+
+    public boolean merge(DepartmentBean db) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(db);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            LogManager.log("Exception in editing department: " + e);
+            LogManager.log("Department: " + UtilsManager.beanAsJsonString(db));
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
+        LogManager.log("Department added to db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(db));
+        return true;
     }
 
     public List<DepartmentBean> findAll() {
@@ -194,4 +225,39 @@ public class DepartmentBean extends Bean implements Serializable {
         return query.getResultList();
     }
 
+    public DepartmentBean findById() {
+        TypedQuery<DepartmentBean> query = getEntityManager().createNamedQuery("DepartmentBean.findById", DepartmentBean.class);
+        query.setParameter("id", id);
+        DepartmentBean db = null;
+        try {
+            db = query.getSingleResult();
+        } catch (NoResultException e) {
+            LogManager.log("Department not found\nId:" + this.id);
+        } catch (NonUniqueResultException e) {
+            LogManager.log("More than one Department login details found\nId:" + this.id);
+        } catch (Exception e) {
+            LogManager.log("Unknown Exception in DepartmentBean::findById()\n" + e.getMessage());
+        }
+        return db;
+    }
+
+    public boolean deleteById(DepartmentBean db) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            DepartmentBean removeDepartment = em.find(DepartmentBean.class, db.getId());
+            em.remove(removeDepartment);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            LogManager.log("Exception in DepartmentBean::deleteById(): " + e.getMessage());
+            LogManager.log(UtilsManager.beanAsJsonString(db));
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
+        LogManager.log("Department deleted from db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(db));
+        return true;
+    }
 }

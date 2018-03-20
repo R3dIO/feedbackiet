@@ -1,5 +1,6 @@
 package beans;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Level;
@@ -23,6 +24,7 @@ import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 import managers.LogManager;
+import managers.UtilsManager;
 
 /**
  *
@@ -43,17 +45,21 @@ import managers.LogManager;
 public class ScheduledFeedbackBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    @Expose
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
+    @Expose
     @Basic(optional = false)
     @Column(name = "start_time")
     private int startTime;//in seconds
+    @Expose
     @Basic(optional = false)
     @Column(name = "end_time")
     private int endTime;//in seconds
+    @Expose
     @Basic(optional = false)
     @Column(name = "password")
     private String password;
@@ -140,11 +146,11 @@ public class ScheduledFeedbackBean extends Bean implements Serializable {
         return "beans.ScheduledFeedbackBean[ id=" + id + " ]";
     }
 
-    private boolean persist(Object object) {
+    private boolean persist(ScheduledFeedbackBean sfb) {
         EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
-            em.persist(object);
+            em.persist(sfb);
             em.getTransaction().commit();
         } catch (Exception e) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
@@ -153,6 +159,9 @@ public class ScheduledFeedbackBean extends Bean implements Serializable {
         } finally {
             em.close();
         }
+        LogManager.log("ScheduledFeedbackBean added to db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(sfb));
+
         return true;
     }
 

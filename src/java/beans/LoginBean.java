@@ -5,6 +5,7 @@
  */
 package beans;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +26,7 @@ import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 import managers.LogManager;
+import managers.UtilsManager;
 
 /**
  *
@@ -42,13 +44,16 @@ import managers.LogManager;
 public class LoginBean extends Bean implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    @Expose
     @Id
     @Basic(optional = false)
     @Column(name = "username")
     private String username;
+    @Expose
     @Basic(optional = false)
     @Column(name = "password")
     private String password;
+    @Expose
     @Basic(optional = false)
     @Column(name = "type")
     private String type;
@@ -144,6 +149,26 @@ public class LoginBean extends Bean implements Serializable {
         } finally {
             em.close();
         }
+    }
+
+    public boolean merge(LoginBean lb) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(lb);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "exception caught", e);
+            LogManager.log("Exception in editing login: " + e);
+            LogManager.log("Login: " + UtilsManager.beanAsJsonString(lb));
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
+        LogManager.log("Login changed into db successfully!");
+        LogManager.log(UtilsManager.beanAsJsonString(lb));
+        return true;
     }
 
     //Custom Methods

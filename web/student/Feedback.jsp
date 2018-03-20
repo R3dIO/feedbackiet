@@ -23,6 +23,15 @@
         response.sendRedirect(relativeRootPath + UtilsManager.getHomeUrl("student"));
         return;
     }
+    if (sm.getFeedbackCSFBean() == null) {
+        //No more CSF means Redirect to thank you page
+        sm.invalidateFeedbackSession();
+        LogManager.log("Feedback done! Redirect to Thank you page");
+        String location = UtilsManager.getThankYouPage();
+        response.sendRedirect(relativeRootPath + location);
+        return;
+    }
+    //Some csf remaining, Take Feedback
     ClassBean cb = sm.getFeedbackClassBean();
     SubjectBean sb = sm.getFeedbackSubjectBean();
     FacultyBean fb = sm.getFeedbackFacultyBean();
@@ -42,14 +51,14 @@
         </jsp:include>
     </head>
     <body>
-        <%String logoutUrl = relativeRootPath + "FeedbackServlet?purpose=logout";%>
+        <% //String logoutUrl = relativeRootPath + "FeedbackServlet?purpose=logout";%>
         <jsp:include page="../includes/Header.jsp" >
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
         <!--Check below file to see parameters functionality-->
         <jsp:include page="../includes/Navbar.jsp">
             <jsp:param name="student" value="active"/>
-            <jsp:param name="logout_url" value="<%=logoutUrl%>"/>
+            <jsp:param name="logout" value="hide-logout-button"/>
             <jsp:param name="relative_root_path" value="<%=relativeRootPath%>"/>
         </jsp:include>
         <div class="container ">
@@ -73,7 +82,8 @@
                     <div class="col-3"><b><%=cb.getYear()%></b></div>
                 </div>
                 <div class="row table">
-                    <% if (cb.getSection() != null) {%>
+                    <% if (cb.getSection()
+                                != null) {%>
                     <div class="col-1">Section:</div>
                     <div class="col-3"><b><%=cb.getSection()%></b></div>
                             <%}%>
@@ -102,25 +112,36 @@
                                 <tr>
                                     <th>S.no.</th>
                                     <th>Attributes</th>
-                                    <th>Very Poor</th>
-                                    <th>Poor</th>
-                                    <th>Average</th>
-                                    <th>Good</th>
                                     <th>Excellent</th>
+                                    <th>Good</th>
+                                    <th>Average</th>
+                                    <th>Poor</th>
+                                    <th>Very Poor</th>
                                 </tr>
                             </thead>
                             <%
                                 ArrayList<String> attribList = new ArrayList<String>();
-                                attribList.add("Ability to bring conceptual clarity and promotion of thinking ability by teacher");
-                                attribList.add("Motivation provided");
-                                attribList.add("Teacher's Communication Skill");
-                                attribList.add("Teacher's Regularity and Punctuality");
-                                attribList.add("Teacher's Subject Knowledge");
-                                attribList.add("Completion and Coverage of Course");
-                                attribList.add("Compliments theory with practical examples");
-                                attribList.add("Teacher interaction and guidance outside");
-                                attribList.add("Teacher's Computer/IT Skills");
-                                attribList.add("Teacher's overall performance");
+
+                                attribList.add(
+                                        "Ability to bring conceptual clarity and promotion of thinking ability by teacher");
+                                attribList.add(
+                                        "Motivation provided");
+                                attribList.add(
+                                        "Teacher's Communication Skill");
+                                attribList.add(
+                                        "Teacher's Regularity and Punctuality");
+                                attribList.add(
+                                        "Teacher's Subject Knowledge");
+                                attribList.add(
+                                        "Completion and Coverage of Course");
+                                attribList.add(
+                                        "Compliments theory with practical examples");
+                                attribList.add(
+                                        "Teacher interaction and guidance outside");
+                                attribList.add(
+                                        "Teacher's Computer/IT Skills");
+                                attribList.add(
+                                        "Teacher's overall performance");
                             %>
                             <tbody>
                                 <%
@@ -151,11 +172,17 @@
                             </thead>
                             <%
                                 attribList.clear();
-                                attribList.add("Result of test declared within two weeks of it being conducted.");
-                                attribList.add("Adequate number of assignments / cases given.");
-                                attribList.add("Would you recommend him / her to teach the same subject to your juniors?");
-                                attribList.add("Would you recommend him / her to teach you any other subject?");
-                                attribList.add("In your opinion is this syllabus adequate?");
+
+                                attribList.add(
+                                        "Result of test declared within two weeks of it being conducted.");
+                                attribList.add(
+                                        "Adequate number of assignments / cases given.");
+                                attribList.add(
+                                        "Would you recommend him / her to teach the same subject to your juniors?");
+                                attribList.add(
+                                        "Would you recommend him / her to teach you any other subject?");
+                                attribList.add(
+                                        "In your opinion is this syllabus adequate?");
                             %>
                             <tbody>
                                 <%

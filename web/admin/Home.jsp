@@ -45,6 +45,30 @@
             <hr>
             Welcome <%=sm.getFaculty().getFirstName()%> as Admin
             <hr>
+            <div class="row text-center ">
+                <div class="col-4">
+                    <a href="add/Home.jsp" class="btn btn-info">Add</a>
+                </div>
+                <div class="col-4">
+                    <a href="view_edit_delete/Home.jsp" class="btn btn-info">View Edit Delete</a>
+                </div>
+                <div class="col-4">
+                    <a href="temp/ViewAllFeedback.jsp" class="btn btn-info">View All Feedback</a>
+                    <!--<a href="temp/ChangeAdminPassword.jsp" class="btn btn-info">Change Admin Password</a>-->
+                </div>
+            </div>
+            <hr>
+            <!--            <div class="row text-center ">
+                            <div class="col-4">
+                                <a href="#" class="btn btn-info">View scheduled feedbacks</a>
+                            </div>
+                            <div class="col-4">
+                            </div>
+                            <div class="col-4">
+                            </div>
+                        </div>-->
+
+
         </div>
     </body>
 </html>

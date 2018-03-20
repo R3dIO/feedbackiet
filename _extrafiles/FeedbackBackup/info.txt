@@ -1,0 +1,15 @@
+//Command to export csv from mysql
+select * from feedback_table into outfile '/tmp/Feedback2k17' fields enclosed by '"' terminated by ';' ;
+
+Before open csv exported from mysql into Excel
+go to notepad++ 
+open the csv exported from mysql
+replace .\\. with blank
+for replacing use regular expression and tick (.)match newlines
+do not open csv directly in excel
+open a blank excel file
+Go to DATA tab.
+Click button From Text in the General External Data section.
+Select your CSV file.
+delimit it with the ; 
+and you are all set
